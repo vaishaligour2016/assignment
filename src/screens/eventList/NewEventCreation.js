@@ -1,15 +1,22 @@
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View ,SafeAreaView} from 'react-native'
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, SafeAreaView, AsyncStorage,Alert} from 'react-native'
 import React, { useState } from 'react'
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import moment from 'moment';
 import Icon from 'react-native-vector-icons/Ionicons'
-
-const NewEventCreation = () => {
+import PureButton from '../../components/PureButton';
+//import AsyncStorage from 'react-native-async-storage/async-storage'
+const NewEventCreation = (props) => {
+    const [eventName, setEventName] = useState("");
+    const [eventDescription, setDescription] = useState("");
     const [isStartDatePickerVisible, setStartDatePickerVisibility] = useState(false);
     const [isEndtDatePickerVisible, setEndDatePickerVisibility] = useState(false);
     const [startDate, setStartDate] = useState('')
     const [endDate, setEndDate] = useState('')
-    const [isSelected, setSelection] = useState(false);
+    const [isSingleSelected, setSingleSelected] = useState(false);
+    const [isDailySelected, setDailySelected] = useState(false);
+    const [isWeeklySelected, setWeeklySelected] = useState(false);
+    const [isMonthlySelected, setMonthlySelected] = useState(false);
+    const [isYearlySelected, setYearlySelected] = useState(false);
     const StartDateConfirm = (date) => {
         console.warn("A date has been picked: ", date);
         setStartDate(date)
@@ -20,110 +27,186 @@ const NewEventCreation = () => {
         setEndDate(date)
         setEndDatePickerVisibility(false);
     };
-    return (
-        <SafeAreaView style={{  flex: 1,}}>
-            <ScrollView style={{backgroundColor: 'pink',
-    marginHorizontal: 20,height:'100%'}}>
-            <Text style={styles.text}>Event Name</Text>
-            <TextInput
-                placeholder='Please event name'
-                style={styles.textInput} />
-            <Text style={styles.text}>Event Description</Text>
-            <TextInput
-                placeholder='Please event description'
-                style={styles.textInput} />
-            <Text style={styles.text}>Start Date</Text>
-            <TouchableOpacity onPress={() => setStartDatePickerVisibility(true)} style={{ height: "15%" }}>
-                <View style={[styles.textInput, { height: '65%' }]}>
-                    <DateTimePickerModal
-                        isVisible={isStartDatePickerVisible}
-                        mode="date"
-                        onConfirm={(date) => StartDateConfirm(date)}
-                        onCancel={() => setStartDatePickerVisibility(false)}
-                        value={startDate}
-                    />
-                    <View>
-                        {startDate ?
-                            <Text style={{ fontSize: 15, padding: 14 }}>{moment(startDate).format('DD/MM/YYYY')}</Text> : <Text style={{ fontSize: 15, padding: 14 }}>dd/mm/yyyy</Text>
-                        }
-                    </View>
-                </View>
-            </TouchableOpacity>
+    const newEventCreation = async() => {
+        if (!eventName) {
+            Alert.alert('Please Enter Event Name');
+            return;
+        }
+        if (!startDate) {
+            Alert.alert('Please select start date');
+            return;
+        }
+        if (!endDate) {
+            Alert.alert('Please select end date');
+            return;
+        }
+        const storeLocal = {}
+        storeLocal.eventName= eventName
+        storeLocal.eventDescription= eventDescription
+        storeLocal.startDate = startDate
+        storeLocal.endDate = endDate
+        storeLocal.single = isSingleSelected
+        storeLocal.daily = isDailySelected
+        storeLocal.weekly = isWeeklySelected
+        storeLocal.monthly = isMonthlySelected
+        storeLocal.yearly = isYearlySelected
+        //AsyncStorage.setItem('NewEventCreate', JSON.stringify(storeLocal))
+        await AsyncStorage.getItem('NewEventCreate').then((itemValue) => {
 
-            <Text style={styles.text}>End Date</Text>
-            <TouchableOpacity onPress={() => setEndDatePickerVisibility(true)} style={{ height: "15%" }}>
-                <View style={[styles.textInput, { height: '65%' }]}>
-                    <DateTimePickerModal
-                        isVisible={isEndtDatePickerVisible}
-                        mode="date"
-                        onConfirm={(date) => EndDateConfirm(date)}
-                        onCancel={() => setEndDatePickerVisibility(false)}
-                        value={endDate}
-                    />
-                    <View>
-                        {endDate ?
-                            <Text style={{ fontSize: 15, padding: 14 }}>{moment(endDate).format('DD/MM/YYYY')}</Text> : <Text style={{ fontSize: 15, padding: 14 }}>dd/mm/yyyy</Text>
-                        }
+            let resObject = JSON.parse(itemValue);
+  
+            console.log("get", resObject)
+            if (resObject !== null) {
+  
+                resObject.push({eventName : eventName ,eventDescription:eventDescription,startDate : startDate,endDate :endDate,single: isSingleSelected,daily :isDailySelected,weekly : isWeeklySelected,monthly :isMonthlySelected,yearly : isYearlySelected})
+  
+                const a = AsyncStorage.setItem('NewEventCreate', JSON.stringify(resObject))
+  
+                console.log("****************", JSON.stringify(a))
+              props.navigation.navigate("DrawerNavigationRoutes")
+            }})
+    }
+    
+    return (
+        <View>
+            <ScrollView>
+                <View>
+                    <Text style={styles.text}>Event Name</Text>
+                    <TextInput
+                        placeholder='Please event name'
+                        style={styles.textInput}
+                        onChangeText={(Eventname) => [setEventName(Eventname)]}
+                        maxLength={30} />
+                </View>
+                <View>
+                    <Text style={styles.text}>Event Description</Text>
+                    <TextInput
+                        placeholder='Please event description'
+                        style={styles.textInput} 
+                        onChangeText={(Eventname) => [setDescription(Eventname)]}/>
+                </View>
+                <View>
+                    <Text style={styles.text}>Start Date</Text>
+                    <TouchableOpacity onPress={() => setStartDatePickerVisibility(true)} style={{}}>
+                        <View style={[styles.textInput]}>
+                            <DateTimePickerModal
+                                isVisible={isStartDatePickerVisible}
+                                mode="date"
+                                onConfirm={(date) => StartDateConfirm(date)}
+                                onCancel={() => setStartDatePickerVisibility(false)}
+                                value={startDate}
+                                minimumDate={new Date()}
+                            />
+                            <View>
+                                {startDate ?
+                                    <Text style={{ fontSize: 15, padding: 14 }}>{moment(startDate).format('DD/MM/YYYY')}</Text> : <Text style={{ fontSize: 15, padding: 14 }}>dd/mm/yyyy</Text>
+                                }
+                            </View>
+                        </View>
+                    </TouchableOpacity>
+                </View>
+                <View>
+                    <Text style={styles.text}>End Date</Text>
+                    <TouchableOpacity onPress={() => setEndDatePickerVisibility(true)} >
+                        <View style={[styles.textInput]}>
+                            <DateTimePickerModal
+                                isVisible={isEndtDatePickerVisible}
+                                mode="date"
+                                onConfirm={(date) => EndDateConfirm(date)}
+                                onCancel={() => setEndDatePickerVisibility(false)}
+                                value={endDate}
+                                minimumDate={new Date()}
+                            />
+                            <View>
+                                {endDate ?
+                                    <Text style={{ fontSize: 15, padding: 14 }}>{moment(endDate).format('DD/MM/YYYY')}</Text> : <Text style={{ fontSize: 15, padding: 14 }}>dd/mm/yyyy</Text>
+                                }
+                            </View>
+                        </View>
+                    </TouchableOpacity>
+                </View>
+
+                <Text style={styles.text}>Recurrence type</Text>
+                {/* <View style={{flexDirection:'row'}}>
+          <View style={{ justifyContent: 'center', alignItems: 'center', width: '20%' }}>
+                        <TouchableOpacity
+                            onPress={() => {
+                                setNewJobCardLocalProperty("oilandFilterChange", !jobCard?.oilandFilterChange)
+                            }}
+                            style={styles.checkBox}>
+                            {!jobCard?.oilandFilterChange ? (<Icon type={"tick"} style={{ width: 15, height: 15 }} />) : null}
+                        </TouchableOpacity>
+                    </View>
+            <View style={{width:'50%',backgroundColor:'red',height:'90%'}}>
+              <Text>View1</Text>
+              <TouchableOpacity onPress={()=> console.log("ghjk")}>
+                <Text>hello</Text>
+                <View style={styles.CheckboxTouchable}>
+
+                </View>
+              </TouchableOpacity>
+            </View>
+            <View style={{width:'50%',backgroundColor:'red'}}>
+            <Text>View1</Text>
+            </View>
+          </View> */}
+                <View style={{ flexDirection: 'row', marginBottom: 5, marginTop: 20 }}>
+                    <View style={{ justifyContent: 'center', alignItems: 'center', width: '20%' }}>
+                        <TouchableOpacity
+                            onPress={() => {
+                                setSingleSelected(!isSingleSelected)
+                            }}
+                            style={styles.checkBox}>
+                            {isSingleSelected ? (<Icon name="checkmark-sharp" size={18} style={{ width: 20, height: 20 }} />) : null}
+                        </TouchableOpacity>
+                        <Text>Single</Text>
+                    </View>
+
+                    <View style={{ justifyContent: 'center', alignItems: 'center', width: '20%' }}>
+                        <TouchableOpacity
+                            onPress={() => { setDailySelected(!isDailySelected) }}
+                            style={styles.checkBox}>
+                            {isDailySelected ? (<Icon name="checkmark-sharp" size={18} style={{ width: 15, height: 15 }} />) : null}
+                        </TouchableOpacity>
+                        <Text>Daily</Text>
+                    </View>
+                    <View style={{ justifyContent: 'center', alignItems: 'center', width: '20%' }}>
+                        <TouchableOpacity
+                            onPress={() => { setWeeklySelected(!isWeeklySelected) }}
+                            style={styles.checkBox}>
+                            {isWeeklySelected ? (<Icon name="checkmark-sharp" size={18} style={{ width: 15, height: 15 }} />) : null}
+                        </TouchableOpacity>
+                        <Text>Weekly</Text>
+                    </View>
+                    <View style={{ justifyContent: 'center', alignItems: 'center', width: '20%' }}>
+                        <TouchableOpacity
+                            onPress={() => { setMonthlySelected(!isMonthlySelected) }}
+                            style={styles.checkBox}>
+                            {isMonthlySelected ? (<Icon name="checkmark-sharp" size={18} style={{ width: 15, height: 15 }} />) : null}
+                        </TouchableOpacity>
+                        <Text>Monthly</Text>
+                    </View>
+                    <View style={{ justifyContent: 'center', alignItems: 'center', width: '20%' }}>
+                        <TouchableOpacity
+                            onPress={() => { setYearlySelected(!isYearlySelected) }}
+                            style={styles.checkBox}>
+                            {isYearlySelected ? (<Icon name="checkmark-sharp" size={18} style={{ width: 15, height: 15 }} />) : null}
+                        </TouchableOpacity>
+                        <Text>yearly</Text>
                     </View>
                 </View>
-            </TouchableOpacity>
-            <Text style={styles.text}>Recurrence type</Text>
-            
-            <View style={{marginLeft:20,marginTop:15,flexDirection:'row',justifyContent:'space-between'}}>
-                <TouchableOpacity onPress={() => setSelection(!isSelected)} style={{width:"7%" ,height:'20%'}}>
-                    <View style={isSelected ? [styles.CheckboxTouchableSelected, { backgroundColor: "blue" }] : [styles.CheckboxTouchable, { backgroundColor: 'blue' }]} >
-                        {
-                            isSelected ? <Icon name="checkmark-sharp" size={20} color={"white"} style={{ alignItems: 'center' }} /> : null
-                        }
-                    </View>
-                </TouchableOpacity>
-                <Text style={{}}>Single</Text>
-                <TouchableOpacity onPress={() => setSelection(!isSelected)} style={{width:"7%" ,height:'20%'}}>
-                    <View style={isSelected ? [styles.CheckboxTouchableSelected, { backgroundColor: "blue" }] : [styles.CheckboxTouchable, { backgroundColor: 'blue' }]} >
-                        {
-                            isSelected ? <Icon name="checkmark-sharp" size={20} color={"white"} style={{ alignItems: 'center' }} /> : null
-                        }
-                    </View>
-                </TouchableOpacity>
-                <Text style={{}}>Daily</Text>
-                <TouchableOpacity onPress={() => setSelection(!isSelected)} style={{width:"7%" ,height:'20%'}}>
-                    <View style={isSelected ? [styles.CheckboxTouchableSelected, { backgroundColor: "blue" }] : [styles.CheckboxTouchable, { backgroundColor: 'blue' }]} >
-                        {
-                            isSelected ? <Icon name="checkmark-sharp" size={20} color={"white"} style={{ alignItems: 'center' }} /> : null
-                        }
-                    </View>
-                </TouchableOpacity>
-                <Text style={{}}>Weekly</Text>
-            </View>
-            {/* <View style={{marginLeft:20,marginTop:45,flexDirection:'row',justifyContent:'space-between'}}>
-                <TouchableOpacity onPress={() => setSelection(!isSelected)} style={{width:"7%" ,height:'20%'}}>
-                    <View style={isSelected ? [styles.CheckboxTouchableSelected, { backgroundColor: "blue" }] : [styles.CheckboxTouchable, { backgroundColor: 'blue' }]} >
-                        {
-                            isSelected ? <Icon name="checkmark-sharp" size={20} color={"white"} style={{ alignItems: 'center' }} /> : null
-                        }
-                    </View>
-                </TouchableOpacity>
-                <Text style={{}}>Single</Text>
-                <TouchableOpacity onPress={() => setSelection(!isSelected)} style={{width:"7%" ,height:'20%'}}>
-                    <View style={isSelected ? [styles.CheckboxTouchableSelected, { backgroundColor: "blue" }] : [styles.CheckboxTouchable, { backgroundColor: 'blue' }]} >
-                        {
-                            isSelected ? <Icon name="checkmark-sharp" size={20} color={"white"} style={{ alignItems: 'center' }} /> : null
-                        }
-                    </View>
-                </TouchableOpacity>
-                <Text style={{}}>Daily</Text>
-                <TouchableOpacity onPress={() => setSelection(!isSelected)} style={{width:"7%" ,height:'20%'}}>
-                    <View style={isSelected ? [styles.CheckboxTouchableSelected, { backgroundColor: "blue" }] : [styles.CheckboxTouchable, { backgroundColor: 'blue' }]} >
-                        {
-                            isSelected ? <Icon name="checkmark-sharp" size={20} color={"white"} style={{ alignItems: 'center' }} /> : null
-                        }
-                    </View>
-                </TouchableOpacity>
-                <Text style={{}}>Weekly</Text>
-            </View> */}
-            
+                <View style={{ marginTop: 10 }}>
+                    <PureButton
+                        title="Create New Event"
+                        //onPress={()=>props.navigation.navigate("DrawerNavigationRoutes")}
+                        onPress={() => newEventCreation()}
+                        width="80%"
+                        bgColor={"blue"}
+                        titleColor={"white"}
+                    />
+                </View>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     )
 }
 
@@ -158,5 +241,16 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         borderWidth: 1,
         alignItems: 'center',
+    },
+    checkBox: {
+        height: 20,
+        width: 20,
+        borderRadius: 2,
+        backgroundColor: "white",
+        borderWidth: 0.5,
+        //borderColor: Color.orangeBackground,
+        // alignItems: "center",
+        // justifyContent: "center",
+        //marginLeft: "10%",
     },
 })
