@@ -1,10 +1,10 @@
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, SafeAreaView, AsyncStorage,Alert} from 'react-native'
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, SafeAreaView, AsyncStorage, Alert } from 'react-native'
 import React, { useState } from 'react'
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import moment from 'moment';
 import Icon from 'react-native-vector-icons/Ionicons'
 import PureButton from '../../components/PureButton';
-//import AsyncStorage from 'react-native-async-storage/async-storage'
+
 const NewEventCreation = (props) => {
     const [eventName, setEventName] = useState("");
     const [eventDescription, setDescription] = useState("");
@@ -17,6 +17,7 @@ const NewEventCreation = (props) => {
     const [isWeeklySelected, setWeeklySelected] = useState(false);
     const [isMonthlySelected, setMonthlySelected] = useState(false);
     const [isYearlySelected, setYearlySelected] = useState(false);
+    const [storeData, setStoreData] = useState()
     const StartDateConfirm = (date) => {
         console.warn("A date has been picked: ", date);
         setStartDate(date)
@@ -27,22 +28,22 @@ const NewEventCreation = (props) => {
         setEndDate(date)
         setEndDatePickerVisibility(false);
     };
-    const newEventCreation = async() => {
+    const newEventCreation = async () => {
         if (!eventName) {
-            Alert.alert('Please Enter Event Name');
-            return;
+            Alert.alert("Alert",'Please Enter Event Name');
+             return;
         }
         if (!startDate) {
-            Alert.alert('Please select start date');
+            Alert.alert("Alert",'Please select start date');
             return;
         }
         if (!endDate) {
-            Alert.alert('Please select end date');
+            Alert.alert("Alert",'Please select end date');
             return;
         }
         const storeLocal = {}
-        storeLocal.eventName= eventName
-        storeLocal.eventDescription= eventDescription
+        storeLocal.eventName = eventName
+        storeLocal.eventDescription = eventDescription
         storeLocal.startDate = startDate
         storeLocal.endDate = endDate
         storeLocal.single = isSingleSelected
@@ -50,23 +51,22 @@ const NewEventCreation = (props) => {
         storeLocal.weekly = isWeeklySelected
         storeLocal.monthly = isMonthlySelected
         storeLocal.yearly = isYearlySelected
-        //AsyncStorage.setItem('NewEventCreate', JSON.stringify(storeLocal))
         await AsyncStorage.getItem('NewEventCreate').then((itemValue) => {
-
             let resObject = JSON.parse(itemValue);
-  
-            console.log("get", resObject)
+            let objectvalue = []
             if (resObject !== null) {
-  
-                resObject.push({eventName : eventName ,eventDescription:eventDescription,startDate : startDate,endDate :endDate,single: isSingleSelected,daily :isDailySelected,weekly : isWeeklySelected,monthly :isMonthlySelected,yearly : isYearlySelected})
-  
+                console.log("get", resObject)
+                resObject.push({ eventName: eventName, eventDescription: eventDescription, startDate: startDate, endDate: endDate, single: isSingleSelected, daily: isDailySelected, weekly: isWeeklySelected, monthly: isMonthlySelected, yearly: isYearlySelected })
                 const a = AsyncStorage.setItem('NewEventCreate', JSON.stringify(resObject))
-  
-                console.log("****************", JSON.stringify(a))
-              props.navigation.navigate("DrawerNavigationRoutes")
-            }})
+                props.navigation.navigate("DrawerNavigationRoutes")
+            }
+            else {
+                console.log("3456789")
+                AsyncStorage.setItem('NewEventCreate', JSON.stringify(storeLocal))
+                props.navigation.navigate("DrawerNavigationRoutes")
+            }
+        })
     }
-    
     return (
         <View>
             <ScrollView>
@@ -81,9 +81,10 @@ const NewEventCreation = (props) => {
                 <View>
                     <Text style={styles.text}>Event Description</Text>
                     <TextInput
+                        multiline={true}
                         placeholder='Please event description'
-                        style={styles.textInput} 
-                        onChangeText={(Eventname) => [setDescription(Eventname)]}/>
+                        style={styles.textInput}
+                        onChangeText={(Eventname) => [setDescription(Eventname)]} />
                 </View>
                 <View>
                     <Text style={styles.text}>Start Date</Text>
@@ -127,29 +128,6 @@ const NewEventCreation = (props) => {
                 </View>
 
                 <Text style={styles.text}>Recurrence type</Text>
-                {/* <View style={{flexDirection:'row'}}>
-          <View style={{ justifyContent: 'center', alignItems: 'center', width: '20%' }}>
-                        <TouchableOpacity
-                            onPress={() => {
-                                setNewJobCardLocalProperty("oilandFilterChange", !jobCard?.oilandFilterChange)
-                            }}
-                            style={styles.checkBox}>
-                            {!jobCard?.oilandFilterChange ? (<Icon type={"tick"} style={{ width: 15, height: 15 }} />) : null}
-                        </TouchableOpacity>
-                    </View>
-            <View style={{width:'50%',backgroundColor:'red',height:'90%'}}>
-              <Text>View1</Text>
-              <TouchableOpacity onPress={()=> console.log("ghjk")}>
-                <Text>hello</Text>
-                <View style={styles.CheckboxTouchable}>
-
-                </View>
-              </TouchableOpacity>
-            </View>
-            <View style={{width:'50%',backgroundColor:'red'}}>
-            <Text>View1</Text>
-            </View>
-          </View> */}
                 <View style={{ flexDirection: 'row', marginBottom: 5, marginTop: 20 }}>
                     <View style={{ justifyContent: 'center', alignItems: 'center', width: '20%' }}>
                         <TouchableOpacity

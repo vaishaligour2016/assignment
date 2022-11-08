@@ -1,60 +1,69 @@
-import { StyleSheet, Text, TouchableOpacity, View, AsyncStorage, FlatList } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View, AsyncStorage, FlatList, SafeAreaView } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import Icon from 'react-native-vector-icons/Ionicons'
+import Icons from 'react-native-vector-icons/AntDesign'
+import moment from 'moment'
+import { useIsFocused } from '@react-navigation/native';
 const EventListPage = ({ navigation }) => {
   const [eventList, setEventlist] = useState([])
-  const [setlist, setTodolist] = useState([
-    {"daily": false, "endDate": "2022-11-24T17:41:56.830Z", "eventDescription": "33", "eventName": "33", "monthly": false, "single": false, "startDate": "2022-11-15T17:41:56.830Z", "weekly": true, "yearly": false}
-
-  ])
-
+  const focus = useIsFocused()
   useEffect(() => {
-    console.log("ghjkl")
     getdata()
-    setTimeout(() => {
-      console.log("eventList eventList", eventList)
-    }, 1000);
-  }, [])
+  }, [focus])
   const getdata = async () => {
     try {
       const jsonValue = await AsyncStorage.getItem('NewEventCreate')
       console.log("objaect", jsonValue)
-      setTodolist(jsonValue)
-      console.log("event list--------------------,", eventList)
-      const parsedata = JSON.parse(jsonValue)
-      console.log("parsedata", parsedata)
-      setEventlist(parsedata)
-      console.log("event list--------------------,", eventList.eventName)
-      return setEventlist(parsedata)
-
+      const value = JSON.parse(jsonValue)
+      //value.reverse()
+      console.log("qwerfwe",value)
+      setEventlist(value)
     } catch (e) {
-      // read error
+      console.log(e)
     }
   }
-  const renderItem = ({ item, index }) => {
-    console.log("item in list", index)
+  const renderItem = ({ item }) => {
+    console.log("item list12wqedsdf",item)
     return (
-      <View>
-        <Text>{item.eventName}</Text>
+      <View style={styles.cardViewStyle}>
+        <TouchableOpacity onPress={() => navigation.navigate("EventDetailsScreen", { item: item })}>
+          <View style={styles.listViewStyle}>
+            <Text style={styles.textStyle}>Event Name : </Text>
+            <Text style={{ color: 'black' }}>{item.eventName}</Text>
+          </View>
+          <View style={styles.listViewStyle}>
+            <Text style={styles.textStyle}>Event Start Date : </Text>
+            <Text style={{ color: 'black' }}>{moment(item.startDate).format("L")}</Text>
+          </View>
+          <View style={styles.listViewStyle}>
+            <Text style={styles.textStyle}>Event End Date : </Text>
+            <Text style={{ color: 'black' }}>{moment(item.endDate).format("L")}</Text>
+          </View>
+          <View style={styles.listViewStyle}>
+            <Text style={styles.textStyle}>Event type :</Text>
+            <View>
+              {item.single == true ? <Text style={[styles.eventTextStyle]}>Single</Text> : null}
+              {item.daily == true ? <Text style={[styles.eventTextStyle]}>Daily</Text> : null}
+              {item.monthly == true ? <Text style={[styles.eventTextStyle]}>Monthly</Text> : null}
+              {item.weekly == true ? <Text style={[styles.eventTextStyle]}>Weekly </Text> : null}
+              {item.yearly == true ? <Text style={[styles.eventTextStyle]}>Yearly</Text> : null}
+            </View>
+          </View>
+        </TouchableOpacity>
       </View>
     )
   }
   return (
     <View style={{ flex: 1 }}>
-      <Text>EventListPage</Text>
-      <TouchableOpacity style={styles.fabBtnStyle} onPress={() => navigation.navigate("NewEventScreen")} >
+      <FlatList
+        data={eventList}
+        renderItem={(item)=>renderItem(item)}
+        keyExtractor={item => item.id}
+      />
+      <TouchableOpacity style={styles.navigationButton} onPress={() => navigation.navigate("NewEventScreen")} >
         <Icon name="md-add-circle-outline" size={60}
-          color="green" style={styles.fabBtnStyle} />
+          color="blue" style={styles.navigationButton} />
       </TouchableOpacity>
-      <View>
-        <FlatList
-          data={setlist}
-          renderItem={renderItem}
-        />
-
-      </View>
-
-
     </View>
   )
 }
@@ -62,11 +71,38 @@ const EventListPage = ({ navigation }) => {
 export default EventListPage
 
 const styles = StyleSheet.create({
-  fabBtnStyle: {
-    // marginBottom:20,
-    // justifyContent:'flex-end',
-    // marginBottom:"50%",
-    // bottom:0
-    position: "absolute", bottom: 10, right: 10
+  navigationButton: {
+    position: "absolute",
+    bottom: 10,
+    right: 10
+  },
+  cardViewStyle: {
+    borderRadius: 10,
+    borderWidth: 0.5,
+    backgroundColor: 'white',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 10,
+    shadowRadius: 5.0,
+    elevation: 4,
+    width: '95%',
+    alignSelf: "center",
+    marginTop: 10
+  },
+  listViewStyle: {
+    flexDirection: 'row',
+    paddingHorizontal: 15,
+    marginTop: 10,
+    paddingBottom: 10
+  },
+  textStyle: {
+    color: 'blue',
+    fontWeight: 'bold'
+  },
+  eventTextStyle: {
+    paddingHorizontal: 10
   },
 })

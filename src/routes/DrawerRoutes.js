@@ -11,7 +11,7 @@ const DrawerRoutes = () => {
     <Drawer.Navigator>
     <Drawer.Screen
       name="EventList"
-      options={{drawerLabel: 'Home Screen'}}
+      options={{drawerLabel: 'Event List'}}
       component={EventList}
     />
   </Drawer.Navigator>
